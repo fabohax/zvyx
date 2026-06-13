@@ -19,9 +19,47 @@ Z is a modern, privacy-focused web app for downloading and managing videos and m
 - **Backend/API:** Node.js, TypeScript, yt-dlp, custom download server
 - **Authentication:** NextAuth.js (OAuth, social logins)
 - **Database:** Supabase (for saved videos, download limits)
-- **Other:** Docker, ESLint, pnpm, Vercel, Google Cloud Run
+- **Other:** Docker, ESLint, pnpm, Vercel, Google Cloud Run, IPFS
 
 ---
+
+## Local IPFS Video Archive
+
+When a user completes a download, the browser uploads the finished file to `/api/videos`. If `VIDEO_ARCHIVE_SERVER_URL` is configured, that API route also forwards the file to a local archive receiver, which pins the video through an IPFS node.
+
+1. Run an IPFS node on the local archive machine and keep the HTTP API available, usually on `127.0.0.1:5001`.
+
+2. Configure the archive receiver on the local machine:
+
+```bash
+IPFS_ARCHIVE_HOST=0.0.0.0
+IPFS_ARCHIVE_PORT=3000
+IPFS_API_URL=http://127.0.0.1:5001
+IPFS_GATEWAY_URL=https://ipfs.io/ipfs
+IPFS_ARCHIVE_ALLOW_ORIGIN=https://z-xyz.vercel.app,http://192.168.18.82:3000,http://localhost:3000
+VIDEO_ARCHIVE_SHARED_SECRET=replace-with-a-long-random-secret
+```
+
+3. Start the receiver:
+
+```bash
+pnpm dev:archive
+```
+
+The receiver listens on `http://192.168.18.82:3000/` when that machine owns the `192.168.18.82` LAN address. Health check:
+
+```bash
+curl http://192.168.18.82:3000/health
+```
+
+4. Configure the Next.js/Vercel app to forward completed download uploads:
+
+```bash
+VIDEO_ARCHIVE_SERVER_URL=http://192.168.18.82:3000
+VIDEO_ARCHIVE_SHARED_SECRET=replace-with-the-same-secret
+```
+
+If the app is deployed on Vercel, `192.168.18.82` is a private LAN address and Vercel cannot reach it directly. Expose the archive receiver through a tunnel, VPN, reverse proxy, or public URL, then set `VIDEO_ARCHIVE_SERVER_URL` to that reachable URL.
 
 ## Local Download API
 

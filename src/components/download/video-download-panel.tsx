@@ -41,6 +41,11 @@ type PersistCompletedVideoInput = {
   fileSizeBytes: number;
 };
 
+type PersistCompletedVideoResult = {
+  item: SavedVideoRecord | null;
+  archive: { cid: string; ipfsUri?: string; gatewayUrl?: string | null } | null;
+};
+
 const initialDownloadState: DownloadState = {
   phase: "idle",
   label: "Paste a video URL to start.",
@@ -108,12 +113,12 @@ const persistCompletedVideo = async (
   format: RequestedDownloadFormat,
   quality: RequestedDownloadQuality,
   fileUpload?: PersistCompletedVideoInput,
-): Promise<SavedVideoRecord | null> => {
+): Promise<PersistCompletedVideoResult> => {
   const sourceUrl = result.normalizedUrl ?? result.canonicalUrl;
   const canonicalUrl = result.canonicalUrl ?? result.normalizedUrl;
 
   if (!sourceUrl || !canonicalUrl || !result.title) {
-    return null;
+    return { item: null, archive: null };
   }
 
   let response: Response;
@@ -164,13 +169,20 @@ const persistCompletedVideo = async (
     });
   }
 
-  const payload = await readApiPayload<{ item?: SavedVideoRecord | null; error?: string }>(response);
+  const payload = await readApiPayload<{
+    item?: SavedVideoRecord | null;
+    archive?: PersistCompletedVideoResult["archive"];
+    error?: string;
+  }>(response);
 
   if (!response.ok) {
     throw new Error(payload?.error ?? "Could not sync the video to Supabase.");
   }
 
-  return payload?.item ?? null;
+  return {
+    item: payload?.item ?? null,
+    archive: payload?.archive ?? null,
+  };
 };
 
 const createHistoryEntry = (
@@ -363,10 +375,11 @@ export function VideoDownloadPanel({ locale = "en", pastedUrl, onPastedUrlConsum
 
 
     let savedItem: SavedVideoRecord | null = null;
+    let archivedCid: string | null = null;
     let completionMessage = `Download complete. ${formatBytes(downloadedBytes) ?? "File"} saved to your device.`;
 
     try {
-      savedItem = await persistCompletedVideo(
+      const persistedVideo = await persistCompletedVideo(
         {
           ...data,
           fileName,
@@ -380,9 +393,13 @@ export function VideoDownloadPanel({ locale = "en", pastedUrl, onPastedUrlConsum
           fileSizeBytes: downloadedBytes,
         },
       );
+      savedItem = persistedVideo.item;
+      archivedCid = persistedVideo.archive?.cid ?? null;
 
       if (savedItem?.videoUrl) {
         completionMessage = `Download complete. ${formatBytes(downloadedBytes) ?? "File"} saved and synced to the shared gallery.`;
+      } else if (archivedCid) {
+        completionMessage = `Download complete. ${formatBytes(downloadedBytes) ?? "File"} saved to your device and archived to IPFS.`;
       }
 
       // Dynamically notify DownloadHistoryStrip to add the new video

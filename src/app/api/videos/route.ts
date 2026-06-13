@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isVideoArchiveConfigured, uploadVideoToIpfsArchive, type ArchiveVideoResult } from "@/lib/ipfs-archive";
 import {
   isSupabaseConfigured,
   isSupabaseStorageConfigured,
@@ -46,6 +47,16 @@ type SaveVideoRequestBody = {
   fileSizeBytes?: number | string | null;
 };
 
+type SaveVideoResponse = {
+  saved: boolean;
+  uploaded?: boolean;
+  duplicate?: boolean;
+  storage?: string;
+  item?: Awaited<ReturnType<typeof saveVideoRecord>>;
+  archive?: ArchiveVideoResult | null;
+  archiveError?: string;
+};
+
 const getFormString = (value: FormDataEntryValue | null) => {
   return typeof value === "string" && value.trim() ? value : null;
 };
@@ -70,10 +81,6 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json({ saved: false, storage: "disabled" });
-  }
-
   const contentType = request.headers.get("content-type") ?? "";
   let body: SaveVideoRequestBody | null = null;
   let file: File | null = null;
@@ -122,19 +129,64 @@ export async function POST(request: Request) {
   let fileName = body.fileName ?? file?.name ?? null;
   const parsedSize = Number(body.fileSizeBytes ?? file?.size ?? 0);
   const fileSizeBytes = Number.isFinite(parsedSize) && parsedSize > 0 ? parsedSize : null;
+  let archive: ArchiveVideoResult | null = null;
+  let archiveError: string | undefined;
 
   try {
+    if (file && fileName && isVideoArchiveConfigured()) {
+      try {
+        archive = await uploadVideoToIpfsArchive({
+          sourceUrl: body.sourceUrl,
+          canonicalUrl: body.canonicalUrl,
+          title: body.title,
+          thumbnailUrl: body.thumbnailUrl ?? null,
+          authorName: body.authorName ?? null,
+          provider: body.provider ?? null,
+          durationLabel: body.durationLabel ?? null,
+          requestedFormat,
+          requestedQuality,
+          fileName,
+          contentType: file.type || "video/mp4",
+          fileSizeBytes,
+          fileBytes: await file.arrayBuffer(),
+        });
+      } catch (error) {
+        archiveError = error instanceof Error ? error.message : "Could not archive the video to IPFS.";
+      }
+    }
+
+    if (!isSupabaseConfigured()) {
+      const response: SaveVideoResponse = {
+        saved: false,
+        storage: "disabled",
+        archive,
+        archiveError,
+      };
+
+      return NextResponse.json(response);
+    }
+
+    if (archive && !storagePath && !videoUrl) {
+      storagePath = archive.ipfsUri;
+      videoUrl = archive.gatewayUrl ?? archive.ipfsUri;
+    }
+
     // Check for existing video before saving
     const existing = await findExistingVideo(body.canonicalUrl, requestedFormat, requestedQuality);
     if (existing) {
-      return NextResponse.json({
+      const response: SaveVideoResponse = {
         saved: false,
         duplicate: true,
         item: existing,
-      });
+        archive,
+        archiveError,
+      };
+
+      return NextResponse.json(response);
     }
 
     if (file && isSupabaseStorageConfigured()) {
+      const fileBytes = await file.arrayBuffer();
       const uploadedVideo = await uploadVideoToSupabaseStorage({
         canonicalUrl: body.canonicalUrl,
         title: body.title,
@@ -142,7 +194,7 @@ export async function POST(request: Request) {
         requestedQuality,
         fileName: fileName ?? file.name,
         contentType: file.type || "video/mp4",
-        fileBytes: await file.arrayBuffer(),
+        fileBytes,
       });
 
       storagePath = uploadedVideo.storagePath;
@@ -150,29 +202,50 @@ export async function POST(request: Request) {
       fileName ??= file.name;
     }
 
-    const item = await saveVideoRecord({
-      sourceUrl: body.sourceUrl,
-      canonicalUrl: body.canonicalUrl,
-      title: body.title,
-      thumbnailUrl: body.thumbnailUrl ?? null,
-      authorName: body.authorName ?? null,
-      provider: body.provider ?? null,
-      durationLabel: body.durationLabel ?? null,
-      requestedFormat,
-      requestedQuality,
-      fileName,
-      storagePath,
-      videoUrl,
-      fileSizeBytes,
-      viewCount: null,
-      publishDate: null,
-    });
+    let item: Awaited<ReturnType<typeof saveVideoRecord>>;
 
-    return NextResponse.json({
+    try {
+      item = await saveVideoRecord({
+        sourceUrl: body.sourceUrl,
+        canonicalUrl: body.canonicalUrl,
+        title: body.title,
+        thumbnailUrl: body.thumbnailUrl ?? null,
+        authorName: body.authorName ?? null,
+        provider: body.provider ?? null,
+        durationLabel: body.durationLabel ?? null,
+        requestedFormat,
+        requestedQuality,
+        fileName,
+        storagePath,
+        videoUrl,
+        fileSizeBytes,
+        viewCount: null,
+        publishDate: null,
+      });
+    } catch (error) {
+      if (!archive) {
+        throw error;
+      }
+
+      const response: SaveVideoResponse = {
+        saved: false,
+        uploaded: false,
+        archive,
+        archiveError: error instanceof Error ? `Gallery save failed: ${error.message}` : "Gallery save failed.",
+      };
+
+      return NextResponse.json(response);
+    }
+
+    const response: SaveVideoResponse = {
       saved: true,
       uploaded: Boolean(storagePath),
       item,
-    });
+      archive,
+      archiveError,
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     return NextResponse.json(
       {

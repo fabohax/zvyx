@@ -10,7 +10,7 @@ create table if not exists public.saved_videos (
   provider text,
   duration_label text,
   requested_format text not null check (requested_format in ('mp4', 'mp3', 'best')),
-  requested_quality text not null check (requested_quality in ('1080p', '720p', '480p')),
+  requested_quality text not null check (requested_quality in ('best', '1080p', '720p', '480p')),
   file_name text,
   storage_path text,
   video_url text,
@@ -26,6 +26,14 @@ alter table public.saved_videos add column if not exists file_name text;
 alter table public.saved_videos add column if not exists storage_path text;
 alter table public.saved_videos add column if not exists video_url text;
 alter table public.saved_videos add column if not exists file_size_bytes bigint;
+
+do $$
+begin
+  alter table public.saved_videos drop constraint if exists saved_videos_requested_quality_check;
+  alter table public.saved_videos
+    add constraint saved_videos_requested_quality_check
+    check (requested_quality in ('best', '1080p', '720p', '480p'));
+end $$;
 
 create unique index if not exists saved_videos_canonical_format_quality_idx
   on public.saved_videos (canonical_url, requested_format, requested_quality);

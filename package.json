@@ -7,10 +7,12 @@
     "dev": "next dev --turbopack",
     "dev:web": "next dev --turbopack",
     "dev:api": "tsx server/download-server.ts",
+    "dev:archive": "tsx server/ipfs-archive-server.ts",
     "deploy:download-api:gcp": "bash scripts/deploy-download-api-cloud-run.sh",
     "build": "next build --turbopack",
     "start": "next start",
     "start:api": "node --import tsx server/download-server.ts",
+    "start:archive": "node --import tsx server/ipfs-archive-server.ts",
     "lint": "eslint"
   },
   "dependencies": {
