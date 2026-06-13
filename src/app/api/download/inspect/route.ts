@@ -173,7 +173,7 @@ export async function POST(request: Request) {
   if (result.recognized && result.canonicalUrl) {
     const providerLabels: Record<string, string> = { x: "X", tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube", facebook: "Facebook", vimeo: "Vimeo", redgifs: "RedGifs", pornhub: "Pornhub" };
     try {
-      const useGeneric = ["tiktok", "instagram", "facebook", "vimeo", "redgifs", "pornhub"].includes(result.provider ?? "");
+      const useGeneric = ["x", "tiktok", "instagram", "facebook", "vimeo", "redgifs", "reddit", "pornhub"].includes(result.provider ?? "");
       const metadata = useGeneric
         ? await getGenericMetadata(result.canonicalUrl)
         : await getYouTubeMetadata(result.canonicalUrl);

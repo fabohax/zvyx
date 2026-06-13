@@ -69,8 +69,8 @@ html {
 
 body {
   background:
-    radial-gradient(circle at top, rgba(0, 35, 90, 0.18), transparent 0, transparent 42%),
-    linear-gradient(180deg, #010413 0%, #111111 100%);
+    radial-gradient(circle at top, rgba(0, 8, 20, 0.18), transparent 0, transparent 42%),
+    linear-gradient(180deg, #000000 0%, #111111 100%);
   font-family: 'Inter', Helvetica, Arial, sans-serif !important;
 }
 

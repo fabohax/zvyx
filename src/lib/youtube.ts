@@ -398,6 +398,10 @@ const getFormatSelector = (format: RequestedDownloadFormat, quality: RequestedDo
     return "bestaudio[ext=m4a]/bestaudio";
   }
 
+  if (quality === "best") {
+    return "best[ext=mp4]/22/18/bv*[ext=mp4]+ba[ext=m4a]/bv*+ba/best/b";
+  }
+
   // Prefer combined format, then merge best video+audio (DASH sources like Reddit), then any single best
   return `best[ext=mp4][height<=${ceiling}]/22/18/best[height<=${ceiling}]/bv*[ext=mp4][height<=${ceiling}]+ba[ext=m4a]/bv*[height<=${ceiling}]+ba/best/b`;
 };
@@ -670,12 +674,13 @@ async function getGenericYtDlpBaseArgs() {
 
   const args = ["--ignore-config", "--no-playlist", "--no-warnings", "--extractor-retries", "3"];
 
-  // Use ph-cookies.txt for Pornhub, reddit-cookies.txt for Reddit, instagram-cookies.txt for Instagram, else generic
+  // Use provider-specific cookies when present, but do not force unrelated
+  // cookie files for providers such as X/Twitter that can often work without them.
   const genericCookiesFile =
     process.env.YT_DLP_COOKIE_FILE?.trim() ||
     process.env.YT_DLP_COOKIES_FILE?.trim() ||
     process.env.INSTAGRAM_COOKIES_FILE?.trim() ||
-    "./instagram-cookies.txt";
+    null;
 
   function getCookiesFileForUrl(url: string) {
     try {
@@ -688,8 +693,11 @@ async function getGenericYtDlpBaseArgs() {
       if (/pornhub\.com/.test(url) && existsSync("./ph-cookies.txt")) {
         return "./ph-cookies.txt";
       }
+      if (/instagram\.com/.test(url) && existsSync("./instagram-cookies.txt")) {
+        return "./instagram-cookies.txt";
+      }
     } catch {}
-    return genericCookiesFile;
+    return genericCookiesFile && existsSync(genericCookiesFile) ? genericCookiesFile : null;
   }
 
   // Help yt-dlp find ffmpeg in common locations
@@ -717,7 +725,7 @@ async function getGenericYtDlpInfo(url: string): Promise<YtDlpJsonResponse> {
   const binaryPath = await ensureYtDlpBinary();
   const { args, getCookiesFileForUrl } = await getGenericYtDlpBaseArgs();
   const cookiesFile = getCookiesFileForUrl(url);
-  const ytArgs = [...args, "--cookies", cookiesFile, "--dump-single-json", url];
+  const ytArgs = [...args, ...(cookiesFile ? ["--cookies", cookiesFile] : []), "--dump-single-json", url];
 
 
   try {
@@ -807,7 +815,7 @@ export async function getGenericDownloadContext({
   const cookiesFile = getCookiesFileForUrl(url);
   const fileArgs = [
     ...args,
-    "--cookies", cookiesFile,
+    ...(cookiesFile ? ["--cookies", cookiesFile] : []),
     "--quiet",
     "-f",
     getFormatSelector(format, quality),

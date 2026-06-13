@@ -7,6 +7,7 @@
     "dev": "next dev --turbopack",
     "dev:web": "next dev --turbopack",
     "dev:api": "tsx server/download-server.ts",
+    "deploy:download-api:gcp": "bash scripts/deploy-download-api-cloud-run.sh",
     "build": "next build --turbopack",
     "start": "next start",
     "start:api": "node --import tsx server/download-server.ts",

@@ -44,7 +44,7 @@ const loadEnvFromFile = (filePath: string) => {
       value = value.slice(1, -1);
     }
 
-    process.env[key] = value;
+    process.env[key] ??= value;
   }
 };
 
@@ -248,7 +248,7 @@ const handleInspect = async (request: IncomingMessage, response: ServerResponse)
   if (result.recognized && result.canonicalUrl) {
     const providerLabels: Record<string, string> = { x: "X", tiktok: "TikTok", instagram: "Instagram", youtube: "YouTube", facebook: "Facebook", vimeo: "Vimeo", redgifs: "RedGifs", reddit: "Reddit" };
     try {
-      const useGeneric = result.provider === "tiktok" || result.provider === "instagram" || result.provider === "facebook" || result.provider === "vimeo" || result.provider === "redgifs" || result.provider === "reddit";
+      const useGeneric = result.provider === "x" || result.provider === "tiktok" || result.provider === "instagram" || result.provider === "facebook" || result.provider === "vimeo" || result.provider === "redgifs" || result.provider === "reddit" || result.provider === "pornhub";
       const metadata = useGeneric
         ? await getGenericMetadata(result.canonicalUrl)
         : await getYouTubeMetadata(result.canonicalUrl);
@@ -341,7 +341,7 @@ const handleDownload = async (request: IncomingMessage, requestUrl: URL, respons
     );
   }
 
-  const useGeneric = result.provider === "tiktok" || result.provider === "instagram" || result.provider === "facebook" || result.provider === "vimeo" || result.provider === "redgifs" || result.provider === "reddit";
+  const useGeneric = result.provider === "x" || result.provider === "tiktok" || result.provider === "instagram" || result.provider === "facebook" || result.provider === "vimeo" || result.provider === "redgifs" || result.provider === "reddit" || result.provider === "pornhub";
 
   try {
     const directMediaUrl = useGeneric

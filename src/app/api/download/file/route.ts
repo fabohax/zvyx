@@ -21,13 +21,15 @@ function getClientIp(request: Request): string | null {
 import {
   isRequestedDownloadFormat,
   isRequestedDownloadQuality,
-  recognizeVideoUrl,
 } from "@/lib/video-links";
 import { recognizeVideoUrlAsync } from "@/lib/video-links-async";
 
 const downloadApiBaseUrl = process.env.DOWNLOAD_API_BASE_URL?.trim();
 const downloadApiSharedSecret = process.env.DOWNLOAD_API_SHARED_SECRET?.trim();
 const isVercelRuntime = Boolean(process.env.VERCEL || process.env.VERCEL_URL);
+const supabaseUrl = process.env.SUPABASE_URL?.trim() || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const supabaseServiceKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || process.env.SUPABASE_SECRET_KEY?.trim();
 
 const parseProxyErrorMessage = (rawText: string, status: number) => {
   if (!rawText.trim()) {
@@ -54,27 +56,34 @@ const parseProxyErrorMessage = (rawText: string, status: number) => {
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-    // --- IP download limit logic ---
-    const clientIp = getClientIp(request);
-    if (!clientIp) {
-      return NextResponse.json({ error: "Could not determine client IP address." }, { status: 400 });
+  // --- IP download limit logic ---
+  const clientIp = getClientIp(request);
+  const ipHash = clientIp ? hashIp(clientIp) : null;
+  let limitRows: Array<{ download_count?: number }> = [];
+
+  if (ipHash && supabaseUrl && supabaseServiceKey) {
+    try {
+      const limitRes = await fetch(`${supabaseUrl}/rest/v1/download_limits?ip_hash=eq.${ipHash}`, {
+        headers: {
+          apikey: supabaseServiceKey,
+          Authorization: `Bearer ${supabaseServiceKey}`,
+        },
+        cache: "no-store",
+      });
+
+      if (limitRes.ok) {
+        const rows = await limitRes.json();
+        limitRows = Array.isArray(rows) ? rows : [];
+      }
+    } catch {
+      limitRows = [];
     }
-    const ipHash = hashIp(clientIp);
-    // Check download count for this IP hash in Supabase
-    const limitRes = await fetch(`${process.env.SUPABASE_URL}/rest/v1/download_limits?ip_hash=eq.${ipHash}`, {
-      headers: {
-        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "",
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || ""}`,
-      },
-      cache: "no-store",
-    });
-    if (!limitRes.ok) {
-      return NextResponse.json({ error: "Failed to check download limit." }, { status: 500 });
-    }
-    const limitRows = await limitRes.json();
-    if (Array.isArray(limitRows) && limitRows[0] && limitRows[0].download_count >= 5) {
-      return NextResponse.json({ error: "Download limit reached for your IP. Please try again later." }, { status: 429 });
-    }
+  }
+
+  if (limitRows[0]?.download_count && limitRows[0].download_count >= 5) {
+    return NextResponse.json({ error: "Download limit reached for your IP. Please try again later." }, { status: 429 });
+  }
+
   const { searchParams } = new URL(request.url);
 
   if (downloadApiBaseUrl) {
@@ -173,8 +182,8 @@ export async function GET(request: Request) {
     );
   }
 
-  // Treat Pornhub and all HLS/DASH providers as generic for merged download
-  const useGeneric = ["tiktok", "instagram", "facebook", "vimeo", "redgifs", "pornhub"].includes(result.provider ?? "");
+  // Treat non-YouTube providers as generic yt-dlp downloads.
+  const useGeneric = ["x", "tiktok", "instagram", "facebook", "vimeo", "redgifs", "reddit", "pornhub"].includes(result.provider ?? "");
 
   try {
     let stream, fileName, contentType, metadata;
@@ -185,13 +194,13 @@ export async function GET(request: Request) {
     }
 
     // --- Increment download count for this IP hash ---
-    if (clientIp) {
+    if (ipHash && supabaseUrl && supabaseServiceKey) {
       // Upsert row: if exists, increment; else, insert
-      await fetch(`${process.env.SUPABASE_URL}/rest/v1/download_limits`, {
+      await fetch(`${supabaseUrl}/rest/v1/download_limits`, {
         method: "POST",
         headers: {
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || "",
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || ""}`,
+          apikey: supabaseServiceKey,
+          Authorization: `Bearer ${supabaseServiceKey}`,
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates,return=minimal",
         },
