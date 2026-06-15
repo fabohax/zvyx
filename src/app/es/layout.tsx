@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Z — Video Superapp",
+  title: "ZVYX — Video",
   description:
-    "OS de video unificado para ingerir, procesar, distribuir y monetizar contenido en plataformas globales.",
+    "Tooling open source para descargar, guardar y reproducir videos desde plataformas sociales compatibles.",
 };
 
 export default function EsLayout({

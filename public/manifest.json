@@ -1,7 +1,7 @@
 {
-  "name": "Z APP",
-  "short_name": "Z",
-  "description": "Donwload any Video with URL",
+  "name": "ZVYX",
+  "short_name": "ZVYX",
+  "description": "Download videos from supported social links.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

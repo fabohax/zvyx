@@ -16,7 +16,20 @@ export default function HomeContent({ locale = "en" }: { locale?: Locale }) {
   const [pastedUrl, setPastedUrl] = useState<string | null>(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
 
-
+  const howItWorks = [
+    {
+      title: t.howItWorksStepOneTitle,
+      description: t.howItWorksStepOneDescription,
+    },
+    {
+      title: t.howItWorksStepTwoTitle,
+      description: t.howItWorksStepTwoDescription,
+    },
+    {
+      title: t.howItWorksStepThreeTitle,
+      description: t.howItWorksStepThreeDescription,
+    },
+  ];
 
   // When a new valid link is pasted, always replace the previous input
   const handlePasteUrl = useCallback(async () => {
@@ -81,7 +94,7 @@ export default function HomeContent({ locale = "en" }: { locale?: Locale }) {
         <nav className="mb-3 flex items-center justify-between rounded-full border-none px-2 py-0 backdrop-blur sm:px-6">
           <div>
             <Link href={localePath(locale, "/")}>
-            <Image src="/z.svg" alt="Z logo" className="h-6 w-auto" width={24} height={24} />
+            <Image src="/z.svg" alt="ZVYX logo" className="h-6 w-auto" width={24} height={24} />
             </Link>
           </div>
           <div className="flex items-center gap-2">
@@ -129,6 +142,55 @@ export default function HomeContent({ locale = "en" }: { locale?: Locale }) {
 
         <VideoDownloadPanel locale={locale} pastedUrl={pastedUrl} onPastedUrlConsumed={() => setPastedUrl(null)} />
       </section>
+
+      <section className="mt-14 border-t border-white/10 pt-10">
+        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.4fr] lg:items-start">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-300">
+              ZVYX
+            </p>
+            <h2 className="text-2xl font-semibold text-white sm:text-3xl">
+              {t.howItWorksTitle}
+            </h2>
+            <p className="max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
+              {t.howItWorksDescription}
+            </p>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            {howItWorks.map((item, index) => (
+              <article
+                key={item.title}
+                className="rounded-lg border border-white/10 bg-white/[0.03] p-4"
+              >
+                <div className="mb-4 flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400/10 text-sm font-semibold text-emerald-200">
+                  {index + 1}
+                </div>
+                <h3 className="text-sm font-semibold text-white">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  {item.description}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <footer className="mt-auto flex flex-col gap-4 border-t border-white/10 py-8 text-sm text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+        <p>{t.footerTagline}</p>
+        <div className="flex flex-wrap items-center gap-4">
+          <a
+            href="https://github.com/zuyux/zvyx"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-slate-200 transition hover:text-emerald-200"
+          >
+            {t.openSource}
+          </a>
+        </div>
+      </footer>
 
 
       {/* Absolutely positioned +18 switch for the whole app */}

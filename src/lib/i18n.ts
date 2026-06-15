@@ -14,6 +14,21 @@ const en = {
   heroTitle: "Download Any Video & Share",
   heroDescription:
     "Paste a link, save the file you need, and share it anywhere with a clean, fast, minimal flow.",
+  howItWorksTitle: "How ZVYX works",
+  howItWorksDescription:
+    "ZVYX turns supported social video links into ready-to-save files while keeping the interface focused on one job: paste, inspect, download.",
+  howItWorksStepOneTitle: "Paste a supported link",
+  howItWorksStepOneDescription:
+    "Drop in a URL from YouTube, TikTok, Instagram, X, Facebook, Vimeo, Reddit, or Redgifs.",
+  howItWorksStepTwoTitle: "ZVYX reads the source",
+  howItWorksStepTwoDescription:
+    "The app checks the provider, loads video details, and prepares the best available download stream.",
+  howItWorksStepThreeTitle: "Save and replay",
+  howItWorksStepThreeDescription:
+    "Download the file to your device, then keep successful saves available in the shared gallery for quick playback.",
+  footerTagline: "ZVYX is open source video tooling for fast personal archiving.",
+  openSource: "OSS",
+  githubRepository: "GitHub repository",
 
   // Download panel
   instantDownload: "Instant download",
@@ -108,9 +123,24 @@ const es: DictionaryShape = {
 
   // Hero
   badge: "Descarga y comparte videos rápidamente",
-  heroTitle: "Descarga Cualquier Video y Compártelo",
+  heroTitle: "Descarga Videos & Comparte",
   heroDescription:
     "Pega un enlace, guarda el archivo que necesitas y compártelo donde quieras de forma limpia, rápida y sencilla.",
+  howItWorksTitle: "Cómo funciona ZVYX",
+  howItWorksDescription:
+    "ZVYX convierte enlaces de video social compatibles en archivos listos para guardar, con una interfaz enfocada en una sola tarea: pegar, revisar y descargar.",
+  howItWorksStepOneTitle: "Pega un enlace compatible",
+  howItWorksStepOneDescription:
+    "Usa una URL de YouTube, TikTok, Instagram, X, Facebook, Vimeo, Reddit o Redgifs.",
+  howItWorksStepTwoTitle: "ZVYX lee la fuente",
+  howItWorksStepTwoDescription:
+    "La app verifica el proveedor, carga los detalles del video y prepara la mejor transmisión de descarga disponible.",
+  howItWorksStepThreeTitle: "Guarda y reproduce",
+  howItWorksStepThreeDescription:
+    "Descarga el archivo a tu dispositivo y conserva las descargas exitosas en la galería compartida para reproducirlas rápido.",
+  footerTagline: "ZVYX es tooling open source para archivar videos personales con rapidez.",
+  openSource: "OSS",
+  githubRepository: "Repositorio de GitHub",
 
   // Download panel
   instantDownload: "Descarga instantánea",
