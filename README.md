@@ -1,6 +1,6 @@
-# Z: The Open Video & Music Downloader
+# ZVYX: The Open Video & Music Downloader
 
-Z is a modern, privacy-focused web app for downloading and managing videos and music from YouTube and other platforms. It features a fast, user-friendly interface, robust authentication, and a secure backend for handling downloads. Z is designed for self-hosting or deployment on Vercel, with a flexible API that can run standalone or integrated with the Next.js frontend.
+ZVYX is a modern, privacy-focused web app for downloading and managing videos and music from YouTube and other platforms. It features a fast, user-friendly interface, robust authentication, and a secure backend for handling downloads. ZVYX is designed for self-hosting or deployment on Vercel, with a flexible API that can run standalone or integrated with the Next.js frontend.
 
 ## Features
 
