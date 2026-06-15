@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useCallback, useState, useEffect } from "react";
 import Image from "next/image";
-import { DownloadHistoryStrip } from "@/components/download/download-history-strip";
 import { VideoDownloadPanel } from "@/components/download/video-download-panel";
 import { getDictionary, localePath, type Locale } from "@/lib/i18n";
 import { recognizeVideoUrl } from "@/lib/video-links";
@@ -93,21 +92,6 @@ export default function HomeContent({ locale = "en" }: { locale?: Locale }) {
             >
               <Image src="/paste.svg" alt={t.paste} className="h-5 w-5 " width={20} height={20} />
             </button>
-            <Link
-              href={localePath(locale, "/tv")}
-              className="rounded-full border border-white/10 p-2 text-sm font-medium text-slate-100 transition hover:bg-white/5"
-              aria-label={t.feed}
-            >
-              <Image src="/reels.svg" alt={t.feed} className="h-5 w-5" width={20} height={20} />
-            </Link>
-            <button
-              type="button"
-              className="rounded-full p-1 border border-none bg-transparent hover:bg-white/10 transition cursor-pointer"
-              title="Sign in or manage account"
-              onClick={() => setShowProfileModal(true)}
-            >
-              <Image src="/profile.svg" alt="Profile" width={28} height={28} className="w-7 h-7" />
-            </button>
           </div>
         </nav>
 
@@ -146,10 +130,6 @@ export default function HomeContent({ locale = "en" }: { locale?: Locale }) {
         <VideoDownloadPanel locale={locale} pastedUrl={pastedUrl} onPastedUrlConsumed={() => setPastedUrl(null)} />
       </section>
 
-
-      <section className="mt-8">
-        <DownloadHistoryStrip locale={locale} />
-      </section>
 
       {/* Absolutely positioned +18 switch for the whole app */}
       <div className="fixed left-4 bottom-4 z-50">

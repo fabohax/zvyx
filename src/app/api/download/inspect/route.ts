@@ -4,11 +4,11 @@ import { getGenericMetadata, getYouTubeMetadata } from "@/lib/youtube";
 import {
   isRequestedDownloadFormat,
   isRequestedDownloadQuality,
-  recognizeVideoUrl,
   type RequestedDownloadFormat,
   type RequestedDownloadQuality,
   type VideoRecognitionResult,
 } from "@/lib/video-links";
+import { recognizeVideoUrlAsync } from "@/lib/video-links-async";
 
 const downloadApiBaseUrl = process.env.DOWNLOAD_API_BASE_URL?.trim();
 const downloadApiSharedSecret = process.env.DOWNLOAD_API_SHARED_SECRET?.trim();
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = recognizeVideoUrl(body.url);
+  const result = await recognizeVideoUrlAsync(body.url);
 
   if (!result.normalizedUrl && !result.recognized) {
     return NextResponse.json(

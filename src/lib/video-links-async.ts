@@ -1,7 +1,13 @@
 import { recognizeVideoUrl, parseFacebookUrl } from "./video-links";
 
 export const recognizeVideoUrlAsync = async (rawUrl: string) => {
-  const url = new URL(rawUrl);
+  const normalizedResult = recognizeVideoUrl(rawUrl);
+
+  if (!normalizedResult.normalizedUrl) {
+    return normalizedResult;
+  }
+
+  const url = new URL(normalizedResult.normalizedUrl);
   // Facebook share/v link resolution
   const facebookMatch = parseFacebookUrl(url);
   if (facebookMatch && facebookMatch.kind === "share" && facebookMatch.needsResolve) {
@@ -24,5 +30,5 @@ export const recognizeVideoUrlAsync = async (rawUrl: string) => {
     }
   }
   // Fallback to original sync logic
-  return recognizeVideoUrl(rawUrl);
+  return normalizedResult;
 };

@@ -7,8 +7,8 @@ import { getGenericDirectMediaUrl, getGenericDownloadContext, getGenericMetadata
 import {
   isRequestedDownloadFormat,
   isRequestedDownloadQuality,
-  recognizeVideoUrl,
 } from "../src/lib/video-links";
+import { recognizeVideoUrlAsync } from "../src/lib/video-links-async";
 
 const loadEnvFromFile = (filePath: string) => {
   if (!existsSync(filePath)) {
@@ -231,7 +231,7 @@ const handleInspect = async (request: IncomingMessage, response: ServerResponse)
 
   const requestedFormat = isRequestedDownloadFormat(body.format) ? body.format : "mp4";
   const requestedQuality = isRequestedDownloadQuality(body.quality) ? body.quality : "1080p";
-  const result = recognizeVideoUrl(body.url);
+  const result = await recognizeVideoUrlAsync(body.url);
 
   if (!result.normalizedUrl && !result.recognized) {
     return sendJson(
@@ -328,7 +328,7 @@ const handleDownload = async (request: IncomingMessage, requestUrl: URL, respons
     );
   }
 
-  const result = recognizeVideoUrl(rawUrl);
+  const result = await recognizeVideoUrlAsync(rawUrl);
 
   if (!result.recognized || !result.canonicalUrl) {
     return sendJson(

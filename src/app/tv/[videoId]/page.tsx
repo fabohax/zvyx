@@ -2,11 +2,13 @@ import VideoPageContent from "@/components/video-page-content";
 
 
 type VideoPageProps = {
-  params: { videoId: string };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: Promise<{ videoId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default function SavedVideoPage({ params, searchParams }: VideoPageProps) {
-  const { videoId } = params;
-  return <VideoPageContent videoId={videoId} searchParams={searchParams} />;
+export default async function SavedVideoPage({ params, searchParams }: VideoPageProps) {
+  const { videoId } = await params;
+  const resolvedSearchParams = await searchParams;
+
+  return <VideoPageContent videoId={videoId} searchParams={resolvedSearchParams} />;
 }
